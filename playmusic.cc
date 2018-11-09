@@ -6,132 +6,163 @@
 #include <cstdio>
 #include <SDL.h>
 #include <SDL_mixer.h>
+#include <playmusic.h>
 
-namespace filesys = std::experimental::filesystem;
-const uint8_t SUCCESS = 1;
-const uint8_t FAILURE = 0;
-using ArgList = std::vector<std::string>;
+namespace pm {
 
-const uint8_t minArgCount = 2;
-const uint8_t maxArgCount = 3;
-
-enum class Options {
-  SHUFFLE,
-  REPEAT,
-	HELP,
-};
-
-Options options;
-const uint8_t optIdx = 1;
-const uint8_t cmdIdx = 0;
-const std::string SHUFFLE_OPTION = "--shuffle";
-const std::string REPEAT_OPTION = "--repeat";
-const std::string HELP_OPTION = "--help";
-const std::string CMD_NAME = "playmusic";
-const std::string CMD_NAME_TMP = "./playmusic";
-std::string absolutePath;
-
-// decarations
-bool parse(int argc, ArgList argList);
-void usage();
-void execute();
-
-bool 
-parse(int argc, ArgList argList)
+PlayMusic::PlayMusic(int argc, char** argv)
+  : _argCount(argc)
 {
-  if (argList[cmdIdx] != CMD_NAME && argList[cmdIdx] != CMD_NAME_TMP) {
-    std::cerr << "Error: Incorrect command name. Command name must be \"playmusic\"" << std::endl;
-    usage();
-    std::exit(EXIT_FAILURE);
+  // copy the strings in argv to vector for better 
+  // uasge 
+  std::vector<std::string>(argv, argv + argc).swap(_argList);  
+}
+
+PlayMusic::~PlayMusic()
+{}
+
+void 
+PlayMusic::setAbsolutePath(const uint8_t pathIdx)
+{
+  try {
+    filesys::path filePath = filesys::path(_argList[pathIdx].c_str());
+      _absolutePath = filesys::canonical(filePath).string();
+  } catch (...) {
+      handleError(UserError::INVALID_PATH);
+  }
+}
+
+bool
+PlayMusic::isDirectory()
+{
+  bool isDir = false;
+  try {
+    filesys::path filePath = filesys::path(_absolutePath);
+    isDir = filesys::is_directory(filePath);
+  } catch (...)  {
+    handleError(UserError::INVALID_PATH);  
   }
 
-  if (argc < minArgCount || argc > maxArgCount) {
-    std::cerr << "Error: Malformed command. Wrong number of arguments provided" << std::endl;
-    usage();  
-    std::exit(EXIT_FAILURE); // Malformed Command
-  } 
+  return isDir;
+}
 
-  // check for the options
-  if (argc == maxArgCount) {
-    // switches can either be shuffle or repeat 
-    if (argList[optIdx] == SHUFFLE_OPTION) {
-      options =  Options::SHUFFLE;
-    } else if (argList[optIdx] == REPEAT_OPTION) {
-      options = Options::REPEAT;  
-    } else {
-      std::cerr << "Error: Incorrect switch provided. Command accepts only --shuffle and --repeat" << std::endl;
-      usage();
-      std::exit(EXIT_FAILURE);
-    }
-    try {
-      const uint8_t pathIdx = 2;
-      filesys::path filePath = filesys::path(argList[pathIdx].c_str());
-      absolutePath = filesys::canonical(filePath).string();
-    } catch (...) {
-      std::cerr << "Error: Suspecting path injection attempt. Anyway don't try that in future, provide a path instead" << std::endl;
-      usage();
-      std::exit(EXIT_FAILURE);
-    }
+bool
+PlayMusic::checkExtension(std::string filePath)
+{
+  auto const pos = filePath.find_last_of('.');
+  if (pos != std::string::npos) {
+    if (filePath.substr(pos+1) == "mp3") {
+      return true;  
+    }  
   }
 
-  if (argc == minArgCount) {
-		if (argList[optIdx] == HELP_OPTION) {
-			usage();
-			std::exit(EXIT_SUCCESS);
-		} 
-   
-    try {
-      const uint8_t pathIdx = 1;
-      filesys::path filePath = filesys::path(argList[pathIdx].c_str());
-      absolutePath = filesys::canonical(filePath).string();
-    } catch (...) {
-      std::cerr << "Error: Suspecting path injection attempt. Anyway don't try that in future, provide a path instead" << std::endl;
-      usage();
-      std::exit(EXIT_FAILURE);
-    }
-  
-  }
+  return false;
+}
 
-	return SUCCESS;
+
+/* parse the arguments passed to the command*/
+bool
+PlayMusic::parse()
+{
+   // make sure the comand is playmusic. 
+   uint8_t cmdIdx = 0;
+   if (_argList[cmdIdx] != CMD_NAME && _argList[cmdIdx] != CMD_NAME_TMP) {
+     handleError(UserError::INVALID_CMDNAME);
+   }
+
+   uint8_t pathIdx;
+   uint8_t optIdx = 1;
+   switch(_argCount) {
+    case minArgCount: // [ --help | pathToFile ]
+      if (_argList[optIdx] == HELP_OPTION) {
+        usage();
+        std::exit(EXIT_SUCCESS);
+      } 
+
+      pathIdx = 1;
+      setAbsolutePath(pathIdx);
+      break;
+
+    case maxArgCount: // [ --shuffle | --repeat ] <pathToFile>
+      if (_argList[optIdx] == SHUFFLE_OPTION) {
+        _options = Options::SHUFFLE;  
+      } else if (_argList[optIdx] == REPEAT_OPTION) {
+        _options = Options::REPEAT;  
+      } else {
+        handleError(UserError::INVALID_SWITCH);
+      }
+      
+      pathIdx = 2;
+      setAbsolutePath(pathIdx);
+      break;
+    default:
+        handleError(UserError::INVALID_ARGCOUNT);
+   }
+  return SUCCESS;   
 }
 
 // everything here is context based, parser must have taken care of most of the state
-void execute()
+bool 
+PlayMusic::execute()
 {
 	SDL_Init(SDL_INIT_AUDIO);
   
 	int result = 0;
 	int flags = MIX_INIT_MP3;
 
-  if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
-    std::cerr <<  "Error: " << Mix_GetError() <<  std::endl;
+  if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+    handleError(InternalError::MIXER_OPEN_AUDIO_ERROR);
   }
 
 	if (flags != (result = Mix_Init(flags))) {
-		printf("Could not initialize mixer (result: %d).\n", result);
-		printf("Mix_Init: %s\n", Mix_GetError());
-		exit(1);
-	}
-
-  Mix_Music* music(Mix_LoadMUS("random.mp3"));
-  if (!music) {
-    std::cerr << "Error: Could not load music" << std::endl;
-    std::exit(EXIT_FAILURE);
+	  handleError(InternalError::MIXER_INIT_ERROR);
   }
 
-  Mix_VolumeMusic( 128 );
-  if ( Mix_PlayMusic( music, 1) != 0 ) {
-		std::cout << "Error while playing" << std::endl;
-    std::exit(EXIT_FAILURE);
-  } 
-  
-  SDL_Delay(1000*20); 
-	Mix_FreeMusic(music);
-  music = nullptr;
+  Mix_Music* music;
+  if (isDirectory()) {
+    for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
+      std::string fileName = file.path().string();
+      if (checkExtension(fileName)) {
+        std::cout << "Now Playing: " << fileName << std::endl;
+        music = Mix_LoadMUS(fileName.c_str());
+        if (!music) {
+          handleError(InternalError::MUSIC_LOAD_ERROR);
+        }
+
+        if ( Mix_PlayMusic( music, 1) != 0 ) {
+          handleError(InternalError::MUSIC_PLAY_ERROR);
+        } 
+
+        while (Mix_PlayingMusic()) {
+          SDL_Delay(50); 
+        }
+        Mix_FreeMusic(music);
+        music = nullptr;
+      }
+    }
+  } else {
+     if (checkExtension(_absolutePath)) {
+        std::string fileName = filesys::path(_absolutePath).filename().string();
+        std::cout << "Now Playing: " << fileName << std::endl;
+        music = Mix_LoadMUS(_absolutePath.c_str());
+        if (!music) {
+          handleError(InternalError::MUSIC_LOAD_ERROR);
+        }
+
+        if ( Mix_PlayMusic( music, 1) != 0 ) {
+          handleError(InternalError::MUSIC_PLAY_ERROR);
+        } 
+
+        while (Mix_PlayingMusic()) {
+          SDL_Delay(50); 
+        }
+        Mix_FreeMusic(music);
+        music = nullptr;
+      }
+  }
   Mix_CloseAudio();
 	Mix_Quit();
   SDL_Quit();
-	std::cout << "Hurray !" << std::endl;
 }
 
 /*
@@ -142,20 +173,22 @@ void execute()
  * Note: music files are read based on extension, 
  *       current support is limited to mp3 and wav
  */
-void usage()
+void 
+PlayMusic::usage()
 {
   std::cout << " Usage: \n"
             << " playmusic [--help] [--shuffle | --repeat] <path-to-music>" << std::endl;
 }
 
+}
+
 int main(int argc, char** argv)
 {
   // safe code - code safe, we don't want to mess with pointers
-  
-  ArgList argList {argv, argv + argc};
-  if (parse(argc, argList)) {
-    std::thread playMusic(execute);
-    playMusic.join();
-  }
+  using namespace pm;
+  PlayMusic playMusic(argc, argv);
+  if (playMusic.parse()) {
+    playMusic.execute();  
+  } 
   return 0;  
 }
