@@ -7,17 +7,17 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-7.3.0
-      - g++-7.3.0
+      - gcc-7
+      - g++-7
       - cmake
 
 before_install:
   - sudo apt-get install -qq libsdl2-dev libsdl2-mixer-dev
 
 script:
-  - sudo ln -s /usr/bin/gcc-7.3.0 /usr/local/bin/gcc
-  - sudo ln -s /usr/bin/g++-7.3.0 /usr/local/bin/g++
-  - export CC=/usr/bin/gcc-7.3.0
-  - export CXX=/usr/bin/g++-7.3.0
+  - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
+  - sudo ln -s /usr/bin/g++-7 /usr/local/bin/g++
+  - export CC=/usr/bin/gcc-7
+  - export CXX=/usr/bin/g++-7
   - gcc -v && g++ -v && cmake --version
   - ./configure.sh
