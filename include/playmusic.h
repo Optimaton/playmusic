@@ -7,7 +7,7 @@ namespace filesys = std::experimental::filesystem;
 const uint8_t SUCCESS = 1;
 const uint8_t FAILURE = 0;
 using ArgList = std::vector<std::string>;
-
+using FileList = std::vector<std::string>;
 /* set of options/switches one can specify with the command */
 enum class Options {
   SHUFFLE,
@@ -39,6 +39,7 @@ private:
   bool checkExtension(std::string filePath);
 
   ArgList _argList;
+  FileList _fileList;
   uint8_t _argCount;
   std::string _absolutePath; 
   Options _options;

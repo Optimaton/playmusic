@@ -4,6 +4,8 @@
 #include <experimental/filesystem>
 #include <cstdio>
 #include <string>
+#include <algorithm>
+#include <random>
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <errorhandler.h>
@@ -82,6 +84,13 @@ PlayMusic::parse()
 
       pathIdx = 1;
       setAbsolutePath(pathIdx);
+      if (isDirectory()) {
+        for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
+          _fileList.emplace_back(file.path().string());
+        }
+      } else {
+        _fileList.emplace_back(_absolutePath);
+      }
       break;
 
     case maxArgCount: // [ --shuffle | --repeat ] <pathToFile>
@@ -95,6 +104,13 @@ PlayMusic::parse()
       
       pathIdx = 2;
       setAbsolutePath(pathIdx);
+      if (isDirectory()) {
+        for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
+          _fileList.emplace_back(file.path().string());
+        }
+      } else {
+        _fileList.emplace_back(_absolutePath);
+      }
       break;
     default:
         handleError(UserError::INVALID_ARGCOUNT);
@@ -121,8 +137,12 @@ PlayMusic::execute()
 
   Mix_Music* music;
   if (isDirectory()) {
-    for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
-      std::string fileName = file.path().string();
+    if (_options == Options::SHUFFLE) {
+     std::random_device rd;
+     std::mt19937 rng(rd());
+     std::shuffle(std::begin(_fileList), std::end(_fileList), rng);
+    }
+    for (auto& fileName : _fileList) {
       if (checkExtension(fileName)) {
         std::cout << "Now Playing: " << fileName << std::endl;
         music = Mix_LoadMUS(fileName.c_str());

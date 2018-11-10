@@ -19,6 +19,7 @@ if [[ $? -eq 0 ]]; then
 else
     echo "[ERROR] Could not create makefile"
     cd ..
+    rm -rf build
 fi
 
 # cp the executable from build directory to bin
@@ -33,5 +34,7 @@ if [[ $? -eq 0 ]]; then
     rm -rf build
 else
     echo -e "[Error] Could not build the project"
+    cd ..
+    rm -rf build
 fi
 
