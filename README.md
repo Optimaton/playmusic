@@ -11,15 +11,15 @@ A simple command line utility written in C++ to play music from console.
 3. just run `./configure.sh`
 4.  TADA ! you should find the binary in bin folder if every thing works
 
-**Usage:**
-`playmusic <path-to-file | path-to-directory>`
-`playmusic [ --shuffle | --repeat ]  <path-to-file | path-to-directory>`
-`playmusic [--help]`
+**Usage:** <br>
+`playmusic <path-to-file | path-to-directory>` <br>
+`playmusic [ --shuffle | --repeat ]  <path-to-file | path-to-directory>` <br>
+`playmusic [--help]` <br>
 
 **example usage:** `playmusic 'sample music/'`
 
-**Features**
-`1. Works only on offline files`
-`2. Can shuffle the music in the directory`
-`3. Can repeat the music`
+**Features** <br>
+`1. Works only on offline files` <br>
+`2. Can shuffle the music in the directory` <br>
+`3. Can repeat the music` <br>
 
