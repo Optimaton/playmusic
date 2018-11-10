@@ -12,7 +12,9 @@ addons:
       - cmake
 
 before_install:
-  - sudo apt-get install -qq libsdl2-dev libsdl2-mixer-dev
+  - sudo apt-cache search libsdl2
+  - sudo apt-get install libsdl2-dev
+  - sudo apt-get install libsdl2-mixer-dev
 
 script:
   - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
