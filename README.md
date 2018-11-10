@@ -1,5 +1,5 @@
 ## playmusic
-A simple command line utility written in C++ to play music from console.
+A simple command line utility written in C++ to play music from console. <br>
 `keywords` : `C++17`,`SDL`,`Mixer`,`GCC 7+`
 
 > Note: Please make sure you have a compiler that supports C++ 17
