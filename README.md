@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Optimaton/playmusic.svg?branch=master)](https://travis-ci.org/Optimaton/playmusic)
+
 ## playmusic
 A simple command line utility written in C++ to play music from console. <br>
 `keywords` : `C++17`,`SDL`,`Mixer`,`GCC 7+`
