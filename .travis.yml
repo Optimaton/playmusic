@@ -12,9 +12,13 @@ addons:
       - cmake
 
 before_install:
-  - sudo apt-cache search libsdl2
-  - sudo apt-get install libsdl2-dev
-  - sudo apt-get install libsdl2-mixer-dev
+# Download, make and install SDL2-2.0.8 (stable)
+ - |
+   travis_retry curl -L https://www.libsdl.org/release/SDL2-2.0.8.tar.gz | tar xz
+   cd SDL2-2.0.8
+   ./configure
+   make
+   sudo make install
 
 script:
   - sudo ln -s /usr/bin/gcc-7 /usr/local/bin/gcc
