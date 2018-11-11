@@ -8,8 +8,8 @@ A simple command line utility written in C++ to play music from console. <br>
 
 **Steps to build:**
 1. Install a version of compiler of `gcc` that supports `C++17`.
-2. We are working with ubuntu here. so the steps here will cater to ubuntu users with Advance Packaging Tool (apt) available to them but the steps can be generalized to any linux distro. `ex: use yum with centos`
-`apt-get install libsdl2.0-dev libsdl-mixer2.0-dev`
+2. We are working with ubuntu here. so the steps here will cater to ubuntu users with Advance Packaging Tool (apt) available to them but the steps can be generalized to any linux distro. `ex: use yum with centos` <br>
+**command** : `apt-get install libsdl2.0-dev libsdl-mixer2.0-dev`
 3. just run `./configure.sh`
 4.  TADA ! you should find the binary in bin folder if every thing works
 
