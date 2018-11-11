@@ -11,7 +11,6 @@
 
 int main(int argc, char** argv)
 {
-  // safe code - code safe, we don't want to mess with pointers
   using namespace pm;
   PlayMusic playMusic(argc, argv);
   if (playMusic.parse()) {
