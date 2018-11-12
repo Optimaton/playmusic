@@ -84,13 +84,6 @@ PlayMusic::parse()
 
       pathIdx = 1;
       setAbsolutePath(pathIdx);
-      if (isDirectory()) {
-        for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
-          _fileList.emplace_back(file.path().string());
-        }
-      } else {
-        _fileList.emplace_back(_absolutePath);
-      }
       break;
 
     case maxArgCount: // [ --shuffle | --repeat ] <pathToFile>
@@ -104,17 +97,19 @@ PlayMusic::parse()
       
       pathIdx = 2;
       setAbsolutePath(pathIdx);
-      if (isDirectory()) {
-        for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
-          _fileList.emplace_back(file.path().string());
-        }
-      } else {
-        _fileList.emplace_back(_absolutePath);
-      }
       break;
     default:
         handleError(UserError::INVALID_ARGCOUNT);
    }
+
+   if (isDirectory()) {
+    for (auto& file : filesys::directory_iterator(_absolutePath.c_str())) {
+      _fileList.emplace_back(file.path().string());
+    }
+   } else {
+    _fileList.emplace_back(_absolutePath);
+   }
+
   return SUCCESS;   
 }
 
